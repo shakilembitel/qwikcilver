@@ -3,9 +3,9 @@ import dotenv from "dotenv";
 dotenv.config();
 
 export async function loader() {
-  console.log("SHOPIFY_API_SECRET", process.env.SHOPIFY_API_SECRET);
-  console.log("SHOPIFY_APP_URL", process.env.SHOPIFY_APP_URL);
-  console.log("SHOPIFY_API_VERSION", process.env.SHOPIFY_API_VERSION);
+  console.log("SHOPIFY_API_SECRETt", process.env.SHOPIFY_API_SECRET);
+  console.log("SHOPIFY_APP_URLt", process.env.SHOPIFY_APP_URL);
+  console.log("SHOPIFY_API_VERSIONt", process.env.SHOPIFY_API_VERSION);
 }
 export async function action({ request, context }) {
   const SHOPIFY_API_SECRET = process.env.SHOPIFY_API_SECRET;

@@ -25,4 +25,4 @@ EXPOSE 3000
 
 # Run migrations and start the app
 
-CMD ["npm", "run", "docker-start"]
+CMD ["npm", "run", "docker-start", "npx prisma migrate deploy && npm run start"]
