@@ -12,9 +12,9 @@ export async function action({ request, context }) {
   const SHOPIFY_APP_URL = process.env.SHOPIFY_APP_URL;
   const SHOPIFY_API_VERSION = process.env.SHOPIFY_API_VERSION;
 
-  console.log("SHOPIFY_API_SECRETT", SHOPIFY_API_SECRET);
-  console.log("SHOPIFY_APP_URLT", SHOPIFY_APP_URL);
-  console.log("SHOPIFY_API_VERSIONT", SHOPIFY_API_VERSION);
+  console.log("SHOPIFY_API_SECRETN", SHOPIFY_API_SECRET);
+  console.log("SHOPIFY_APP_URLTN", SHOPIFY_APP_URL);
+  console.log("SHOPIFY_API_VERSIONTN", SHOPIFY_API_VERSION);
 
   if (!SHOPIFY_APP_URL || !SHOPIFY_API_SECRET || !SHOPIFY_API_VERSION) {
     console.error("Missing required environment variables");
