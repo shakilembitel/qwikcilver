@@ -3,7 +3,7 @@
 client_id = "5843d5229e4be1bcc114e32355c59d39"
 name = "qwikcilver-apps"
 handle = "qwikcilver-apps"
-application_url = "https://shopify-qwikcilver.onrender.com"
+application_url = "https://shopify-qwikcilver.onrender.com/"
 embedded = true
 
 [build]
