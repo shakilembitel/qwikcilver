@@ -1,0 +1,185 @@
+<script>
+  async function balanceEnquiry() {
+    try {
+      let cardNumber = document.getElementById('gift_card_number').value.replace(/\D/g, '');
+      let cardPIN = document.getElementById('gift_card_pin').value.replace(/\D/g, '');
+  
+      if (!validateCardDetails(cardNumber, cardPIN)) {
+        return false;
+      }
+  
+      let apiRawData = JSON.parse(localStorage.getItem('QC-ApiData'));
+      const response = await fetch(POST_Balance_Enquiry, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          DateAtClient: DateAtServer,
+          TransactionId: apiRawData?.transId,
+          Authorization: `Bearer ${apiRawData.AuthToken}`,
+        },
+        body: JSON.stringify({
+          TransactionTypeId: 306,
+          InputType: '1',
+          Cards: [{ CardNumber: cardNumber, CardPin: cardPIN }],
+        }),
+      });
+  
+      if (response.status !== 200) {
+        throwErrorMessage(response.status)
+        return false
+      }
+  
+      const data = await response.json();
+      
+      if (data.Cards.length === 0 || data.ResponseMessage !== 'Transaction successful.') {
+        apiResponseMsg.classList.add('response-error');
+        apiResponseMsg.innerHTML = `${data?.Cards[0]?.ResponseMessage}`
+        apiResponseMsg.innerHTML = data?.Cards?.[0]?.ResponseMessage ?? data?.ResponseMessage ?? "Something went wrong";
+        return false;
+      }
+  
+      let balance = data.Cards[0]?.Balance || 0;
+      apiResponseMsg.classList.remove('response-error')
+      apiResponseMsg.classList.add('response-success');
+      apiResponseMsg.innerHTML = `Card Balance: ${balance}`;
+  
+      apiRawData.transId++;
+      localStorage.setItem('QC-ApiData', JSON.stringify(apiRawData));
+      return data;
+  
+    } catch (error) {
+      console.error('Error in Balance enquiry API:', error);
+      return false;
+    }
+  }
+
+  
+  {% comment %} async function balanceEnquiry() {
+    try {
+      let cardNumber = document.getElementById('gift_card_number').value.replace(/\D/g, '');
+      let cardPIN = document.getElementById('gift_card_pin').value.replace(/\D/g, '');
+
+      // Clear all error messages and success/failure displays initially
+      const clearDisplay = () => {
+        cardError.style.display = 'none';
+        pinError.style.display = 'none';
+        amountError.style.display = 'none';
+      };
+
+      clearDisplay();
+
+      if (cardNumber.length === 0) {
+        cardError.style.display = 'block';
+        cardError.innerHTML = `Please enter a card number.`;
+        {% comment %} applyGiftcard.style.display = 'block'; {% endcomment %}
+        {% comment %} applyGiftcard.disabled = false; {% endcomment %}
+        {% comment %} applyRedeemButton.disabled = false; {% endcomment %}
+        {% comment %} applyRedeemButton.style.display = 'none'; {% endcomment %}
+      }
+      if (cardPIN.length === 0) {
+        pinError.style.display = 'block';
+        pinError.innerHTML = `Please enter a PIN.`;
+        {% comment %} applyGiftcard.style.display = 'block'; {% endcomment %}
+        {% comment %} applyGiftcard.disabled = false; {% endcomment %}
+        {% comment %} applyRedeemButton.disabled = false; {% endcomment %}
+        {% comment %} applyRedeemButton.style.display = 'none'; {% endcomment %}
+      }else if (cardPIN.length < 6) {
+        pinError.style.display = 'block';
+        pinError.innerHTML = `Please enter a 6-digit PIN.`;
+        {% comment %} applyGiftcard.style.display = 'block'; {% endcomment %}
+        {% comment %} applyGiftcard.disabled = false; {% endcomment %}
+        {% comment %} applyRedeemButton.disabled = false; {% endcomment %}
+        {% comment %} applyRedeemButton.style.display = 'none'; {% endcomment %}
+      }
+      if (cardNumber.length > 0 && cardNumber.length < 16) {
+        cardError.style.display = 'block';
+        cardError.innerHTML = `Please enter a 16-digit card number.`;
+        {% comment %} applyGiftcard.style.display = 'block'; {% endcomment %}
+        {% comment %} applyGiftcard.disabled = false; {% endcomment %}
+        {% comment %} applyRedeemButton.disabled = false; {% endcomment %}
+        {% comment %} applyRedeemButton.style.display = 'none'; {% endcomment %}
+      }
+      if (cardNumber.length === 16 && cardPIN.length === 6) {
+        let apiRawData = JSON.parse(localStorage.getItem('QC-ApiData'));
+        const response = await fetch(POST_Balance_Enquiry, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            DateAtClient: DateAtServer,
+            TransactionId: apiRawData?.transId,
+            Authorization: `Bearer ${apiRawData.AuthToken}`,
+          },
+          body: JSON.stringify({
+            TransactionTypeId: 306,
+            InputType: '1',
+            Cards: [
+              { 
+                CardNumber: cardNumber,
+                CardPin: cardPIN,
+              }
+            ],
+          }),
+        });
+
+        if (!response.ok) {
+          apiResponseMsg.classList.add('response-error');
+          apiResponseMsg.innerHTML = `Service Unavailable. Please try after sometime`;
+          return false;
+        }
+
+        if (response.status === 200) {
+          const data = await response.json()
+          if (data.Cards.length === 0) {
+            apiResponseMsg.classList = '';
+            apiResponseMsg.classList.add('response-error');
+            apiResponseMsg.innerHTML = `Check You Card Details`;
+            {% comment %} applyGiftcard.disabled = false; {% endcomment %}
+            {% comment %} applyRedeemButton.disabled = false; {% endcomment %}
+            return false
+          }
+        
+          if (data.ResponseMessage === 'Transaction successful.') {
+            let balance = data.Cards[0]?.Balance || 0;
+            apiResponseMsg.classList = '';
+            apiResponseMsg.classList.add('response-success');
+            apiResponseMsg.innerHTML = `Card Balance: ${balance}`
+          } else if(data.Cards[0]?.Balance === 0){
+            apiResponseMsg.classList.add('response-error');
+            let responseMessage = data.Cards[0]?.ResponseMessage;
+            if (responseMessage === "Program parameters not available.") {
+                responseMessage = "Either Card Number or Card Pin is Incorrect.";
+            }
+            apiResponseMsg.innerHTML = responseMessage;
+            {% comment %} applyGiftcard.style.display = 'block'; {% endcomment %}
+            {% comment %} applyRedeemButton.style.display = 'none'; {% endcomment %}
+            {% comment %} applyGiftcard.disabled = false; {% endcomment %}
+            {% comment %} applyRedeemButton.disabled = false; {% endcomment %}
+            return false;
+          }else {
+            apiResponseMsg.classList = '';
+            apiResponseMsg.classList.add('response-error');
+            apiResponseMsg.innerHTML = `${data.ResponseMessage}`
+            {% comment %} applyGiftcard.style.display = 'block'; {% endcomment %}
+            {% comment %} applyRedeemButton.style.display = 'none'; {% endcomment %}
+            {% comment %} applyGiftcard.disabled = false; {% endcomment %}
+            {% comment %} applyRedeemButton.disabled = false; {% endcomment %}
+            return false
+          }
+        
+          apiRawData.transId++
+          localStorage.setItem('QC-ApiData', JSON.stringify(apiRawData))
+          return data
+        } else {
+          apiResponseMsg.classList.add('response-error');
+          apiResponseMsg.innerHTML = `Service Unavailable. Please try after sometime`;
+          return false
+        }        
+      }
+    } catch (error) {
+      console.error('Error in Balance enquiry API:', error);
+      apiResponseMsg.classList.add('response-error');
+      apiResponseMsg.innerHTML = `Service Unavailable. Please try after sometime`;
+      return false;
+    }
+  } {% endcomment %}
+</script>

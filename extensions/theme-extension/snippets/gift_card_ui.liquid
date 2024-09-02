@@ -1,0 +1,155 @@
+<script>
+  const giftCard = document.getElementById('giftcard');
+  const popUp = document.getElementById('popUp');
+  const modalClose = document.querySelector('.modal-close');
+  const body = document.querySelector('body');
+  const modalContent = document.querySelector('#giftcard .modal-content');
+  const clipboard = document.querySelector('#clipboard');
+  const cardError = document.getElementById('cardError');
+  const pinError = document.getElementById('pinError');
+  const amountError = document.getElementById('gc_amountError');
+  const apiResponseMsg = document.getElementById('api-response-msg');
+  {% comment %} const applyGiftcard = document.getElementById('apply_giftcard_btn'); {% endcomment %}
+  const applyRedeemButton = document.getElementById('apply_redeem_btn');
+  const balanceCheckBtn = document.getElementById('balance_enquiry_button');
+  const giftCardNumber = document.getElementById('gift_card_number');
+  const giftCardPin = document.getElementById('gift_card_pin');
+  const gcAmount = document.getElementById('gc_amount');
+  const fetchButton = document.querySelector('#fetchButton');
+  let customerId = ShopifyAnalytics?.meta?.page?.customerId || '';
+  let DateAtServer = getCurrentDateTime();
+  let apiRawData =  localStorage.getItem('QC-ApiData');
+
+  if (apiRawData) {
+    apiRawData = JSON.parse(apiRawData);
+  } else {
+    apiRawData = {
+        transId: 1000, // Initial starting point for TransactionId
+        AuthToken: null,
+        DateStored: new Date().toISOString()
+    };
+  }
+
+  function showModal() {
+    apiResponseMsg.innerHTML = `Create your coupon. Valid for just 15 min!`;
+    apiResponseMsg.classList = 'api-response-msg';
+    popUp.classList.add('active');
+    body.style.overflow = 'hidden';
+  }
+
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') { 
+      closeModal();
+    }
+  });
+  modalClose.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeModal();
+  });
+
+  function closeModal() {
+    popUp.classList.remove('active');
+    body.style.overflow = 'auto';
+    giftCardNumber.value = '';
+    giftCardPin.value = '';
+    gcAmount.value = '';
+    cardError.style.display = 'none'; 
+    pinError.style.display = 'none'; 
+    apiResponseMsg.classList = '';
+    amountError.style.display = 'none';
+    applyRedeemButton.disabled = false;
+    {% comment %} applyGiftcard.disabled = false; {% endcomment %}
+    balanceCheckBtn.disabled = false;
+    {% comment %} applyRedeemButton.style.display = 'none'; {% endcomment %}
+    {% comment %} applyGiftcard.style.display = 'block'; {% endcomment %}
+  }
+
+  document.addEventListener("DOMContentLoaded", async () => {
+    if (customerId) {
+      let discountStoreCoupons = JSON.parse(localStorage.getItem("QC-DiscountCode"));
+  
+      if (Array.isArray(discountStoreCoupons) && discountStoreCoupons.length > 0) {
+        discountStoreCoupons;
+      } else {
+        discountStoreCoupons = await myDiscountCode();
+        localStorage.setItem("QC-DiscountCode", JSON.stringify(discountStoreCoupons));
+      }
+      await showCouponOnCart(discountStoreCoupons);
+    } else {
+      return false;
+    }
+  });
+
+  fetchButton?.addEventListener('click', async (e) => {
+    e.preventDefault();
+  
+    const isCustomer = {% if customer %} true {% else %} false {% endif %};
+  
+    if (isCustomer) {
+      customerId = ShopifyAnalytics.meta.page.customerId;
+      showModal();
+    } else {
+      window.location.href = "/account/login?show_popup=true";
+      return;
+    }
+    const currentDateTime = getCurrentDateTime();
+    if (!isValidDateTimeString(currentDateTime)) {
+      console.error('Invalid dateTimeString format:', currentDateTime);
+      return;
+    }
+    DateAtServer = currentDateTime;
+    const storedData = localStorage.getItem('QC-ApiData');
+    if (storedData) {
+      const parsedData = JSON.parse(storedData)
+      const tokenAge = new Date() - new Date(parsedData.DateStored)
+      const daysSinceTokenStored = tokenAge / (1000 * 60 * 60 * 24)
+    
+      if (parsedData.AuthToken && daysSinceTokenStored < 27) {
+        return // Exit if valid token found
+      } else {
+        const data = await getAuthToken(DateAtServer, apiRawData.transId)
+
+        if (data) {
+          apiRawData.transId++ // Increment TransactionId
+          apiRawData.AuthToken = data.AuthToken
+          apiRawData.DateStored = new Date().toISOString()
+          localStorage.setItem('QC-ApiData', JSON.stringify(apiRawData))
+        }
+      }
+    } else {
+      const data = await getAuthToken(DateAtServer, apiRawData.transId);      
+      if (data) {
+        apiRawData.transId++ // Increment TransactionId
+        apiRawData.AuthToken = data.AuthToken
+        apiRawData.DateStored = new Date().toISOString()
+        localStorage.setItem('QC-ApiData', JSON.stringify(apiRawData))
+      }
+    }
+  });
+
+
+  async function balance_check(e) {
+    e.preventDefault();
+    applyRedeemButton.disabled = false;
+    return await balanceEnquiry();
+  }
+
+  {% comment %} async function applyGiftCartBtn(e) {
+    e.stopPropagation();
+    applyGiftcard.disabled = true;
+    {% comment %} balanceCheckBtn.disabled = true; {% endcomment %}
+    await validateRedeem();
+  } {% endcomment %}
+
+  async function redeem_button(e) {
+    e.stopPropagation();
+    applyRedeemButton.disabled = true;
+    await redeem();
+  }
+
+  function validateInputField(input) {
+    let field = input.value.replace(/\D/g, '');
+    input.value = field;
+  }
+</script>

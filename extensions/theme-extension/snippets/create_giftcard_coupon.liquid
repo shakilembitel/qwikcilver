@@ -1,0 +1,187 @@
+<script>
+  async function createDiscountCode(redeemData) {
+    closeModal();
+    try {
+      const response = await fetch('/apps/coupons', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action : "CREATE",
+          data: {
+            redeemData: redeemData,
+            customerId: customerId 
+          }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      if (data.success && data.discountCode) {
+        {% comment %} const { discountCode } = data; {% endcomment %}
+        
+        // Store the new coupon code in localStorage
+        const storedCouponCodes = JSON.parse(localStorage.getItem('QC-DiscountCode') || '[]');
+        const allCouponCodes = [...storedCouponCodes, data];
+        localStorage.setItem('QC-DiscountCode', JSON.stringify(allCouponCodes));
+
+        showToast('Coupon created! Valid for 15 minutes.', 5000, '#4CAF50');
+
+        // Call function to show coupon on cart (you'll need to implement this)
+        console.log("allCouponCodes", allCouponCodes)
+        await showCouponOnCart(allCouponCodes);
+      } else {
+        throw new Error('Failed to create discount code');
+      }
+    } catch (error) {
+      console.error('Error creating coupon:', error);
+      await cancelRedeem(redeemData);
+    }
+  }
+  
+  async function showCouponOnCart(coupons) {
+    const offerCodes = document.querySelector('.offer .offer_codes');
+    if (!coupons || coupons.length === 0 || !offerCodes) return false;
+
+    offerCodes.innerHTML = '';
+
+    const createCouponElement = (code, amount, discountCodeId, priceRuleId, createdDate, usage_count, code_status, expiresAt) => {
+      code_status = code_status ?? false;
+      const couponElement = document.createElement('div');
+      couponElement.className = 'offer_code';
+      couponElement.innerHTML = `
+        <div>
+          <p class="offer_code__title">${code}</p>
+          <button class="copy-code-btn" data-code="${code}">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368">
+              <path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z"/>
+            </svg>
+          </button> 
+        </div>
+        <p class="offer_code__text"><span>RS. ${amount}</span> rupees off on this QuickCilver Coupon code</p>
+        <p>This coupon is valid for only <b>15 min</b></p>
+        <p class="timer" data-code_status="${code_status}" data-usage_count="${usage_count}" data-create-date="${createdDate}" data-expires-at="${expiresAt}" data-discount-code-id="${discountCodeId}" data-price-rule-id="${priceRuleId}" data-discount-code="${code}">Expires in: <span>${createdDate}</span></p>
+      `;
+      return couponElement;
+    };
+
+    coupons.forEach((coupon) => {
+      const { code, couponCodeId, price_rules_id , created_at, usage_count, code_status = false, expiresAt } = coupon.discountCode;
+
+      if (!code?.trim() || !couponCodeId || !price_rules_id) return false;
+      
+
+      // Find the indices of all capital letters
+      const letterIndices = [...code.matchAll(/[A-Z]/g)].map(match => match.index);
+      let amount;
+
+      // Check if there are at least four letters
+      if (letterIndices.length >= 4) {
+          // Extract the substring between the third and fourth letters
+          amount = code.substring(letterIndices[2] + 1, letterIndices[3]);
+          {% comment %} console.log(amount); {% endcomment %}
+      } else {
+          // Handle the case where there aren't enough letters
+          console.log('Amount not found');
+      }
+
+      const finalExpiresAt = expiresAt || new Date(new Date(created_at).getTime() + 15 * 60000).toISOString();
+      const couponElement = createCouponElement(code, amount, couponCodeId, price_rules_id, created_at, usage_count, code_status, finalExpiresAt);
+      offerCodes.appendChild(couponElement);
+    });
+
+    await initializeTimers();
+    initializeCopyButtons();
+  }
+
+  async function initializeTimers() {
+    // First, set "Used" for all used coupons
+    document.querySelectorAll('.timer[data-code_status="Expired: Code Not Used"]')?.forEach(timerElement => {
+      timerElement.querySelector('span').textContent = 'Expired: Code Not Used';
+    });
+    document.querySelectorAll('.timer[data-code_status="Expired: Code Already Used"]')?.forEach(timerElement => {
+      timerElement.querySelector('span').textContent = 'Expired: Code Already Used';
+    }); 
+
+    // Handle the unused coupons
+    const unusedTimers = document.querySelectorAll('.timer[data-code_status="false"]');
+
+    if (unusedTimers.length === 0) {
+      return; 
+    }
+
+    const updateTimers = async () => {
+      const now = new Date().getTime();
+      let allTimersExpired = true;
+    
+      unusedTimers.forEach(async (timerElement) => {
+        if (timerElement.hasAttribute('data-timer-stopped')) {
+          return; // Skip this timer if it's already stopped
+        }
+        
+        const createTime = new Date(timerElement.getAttribute('data-create-date')).getTime();
+        const expiryTime = new Date(timerElement.getAttribute('data-expires-at')).getTime();
+        const timeLeft = expiryTime - now;
+    
+        const spanElement = timerElement.querySelector('span');
+    
+        if (timeLeft > 0) {
+          allTimersExpired = false;
+          const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+          spanElement.textContent = `${minutes}m ${seconds}s`;
+        } else if (!timerElement.hasAttribute('data-deletion-attempted')) {
+          console.log("First Timer end")
+          spanElement.textContent = 'Expired';
+          const discountCodeId = timerElement.getAttribute('data-discount-code-id');
+          const priceRuleId = timerElement.getAttribute('data-price-rule-id');
+          const discountCode = timerElement.getAttribute('data-discount-code');
+          timerElement.setAttribute('data-deletion-attempted', 'true');
+          timerElement.setAttribute('data-timer-stopped', 'true')
+          await deleteCouponCode(priceRuleId, discountCodeId, discountCode, createTime);
+        }
+      });
+    
+      if (allTimersExpired) {
+        clearInterval(intervalId);
+      }
+    };
+    
+
+    const intervalId = setInterval(updateTimers, 1000);
+  }
+
+  function initializeCopyButtons() {
+    const copyButtons = document.querySelectorAll('.copy-code-btn');
+    copyButtons?.forEach(button => {
+      button.addEventListener('click', function (e) {
+        e.preventDefault();
+        const code = this.getAttribute('data-code');
+        copyToClipboard(code);
+        showToast('Code copied to clipboard!', 3000, '#4CAF50');
+      });
+    });
+  }
+
+  function copyToClipboard(text) {
+    const tempInput = document.createElement('input');
+    tempInput.style.position = 'absolute';
+    tempInput.style.left = '-9999px';
+    tempInput.value = text;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    document.execCommand('copy');
+    document.body.removeChild(tempInput);
+  }
+
+
+</script>

@@ -1,0 +1,41 @@
+<script>
+  let totalPriceRule = [];
+
+  async function myDiscountCode() {
+    try {
+      return await getAllDiscountCodes();
+    } catch (error) {
+      console.error('Error getting all price rule IDs:', error);
+      throw error;
+    }
+  }
+
+  async function getAllDiscountCodes() {
+    try {
+      const response = await fetch('/apps/coupons', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'GETALLCODE',
+          data: {
+            customerId,
+          },
+        }),
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        console.log('Fetched discount codes:', result.allDiscountCode);
+        return result.allDiscountCode;
+      } else {
+        console.log('Discount codes not found');
+        return [];
+      }
+    } catch (error) {
+      console.error('Error getting discount codes:', error);
+      return [];
+    }
+  }
+</script>

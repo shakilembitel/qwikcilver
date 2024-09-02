@@ -1,0 +1,67 @@
+<script>
+  let consecutive500Errors = 0;
+  const throwErrorMessage = (status) => {
+    switch (status) {
+      case 400:
+        apiResponseMsg.classList.add('response-error')
+        apiResponseMsg.innerHTML = `400 Bad Request: The request body is empty or parameter validation fails.`;
+      case 401:
+        apiResponseMsg.classList.add('response-error')
+        apiResponseMsg.innerHTML = `401 Unauthorized: Token validation failed.`;
+      case 500:
+        consecutive500Errors++;
+        if (consecutive500Errors === 3) {
+          throw new Error('');
+          apiResponseMsg.classList.add('response-error')
+          apiResponseMsg.innerHTML = `Internal Server Issue: The server encountered repeated internal errors.`;
+        } else {
+          apiResponseMsg.classList.add('response-error')
+          apiResponseMsg.innerHTML = `500 Internal Server Error: A system exception occurred.`;
+        }
+      case 503:
+        apiResponseMsg.classList.add('response-error')
+        apiResponseMsg.innerHTML = `503 Service Unavailable: System is down or under maintenance.`;
+      default:
+        apiResponseMsg.classList.add('response-error')
+        apiResponseMsg.innerHTML = `HTTP error! Status: ${status}`;
+    }
+  };
+
+  function validateCardDetails(cardNumber, cardPIN) {
+    clearDisplay();
+  
+    let isValid = true;
+  
+    if (cardNumber.length === 0) {
+      cardError.style.display = 'block';
+      cardError.innerHTML = `Please enter a card number.`;
+      isValid = false;
+    }
+    if (cardPIN.length === 0) {
+      pinError.style.display = 'block';
+      pinError.innerHTML = `Please enter a PIN.`;
+      isValid = false;
+    }else if (cardPIN.length < 6) {
+      pinError.style.display = 'block';
+      pinError.innerHTML = `Please enter a 6-digit PIN.`;
+      isValid = false;
+    }
+    if (cardNumber.length > 0 && cardNumber.length < 16) {
+      cardError.style.display = 'block';
+      cardError.innerHTML = `Please enter a 16-digit card number.`;
+      isValid = false;
+    }
+    if(cardNumber.length === 16 && cardPIN.length === 6){
+      isValid = true;
+    }
+  
+    return isValid;
+  }
+  
+  function clearDisplay() {
+    cardError.style.display = 'none';
+    pinError.style.display = 'none';
+    amountError.style.display = 'none';
+  }
+  
+</script>

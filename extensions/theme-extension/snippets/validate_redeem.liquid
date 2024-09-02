@@ -1,0 +1,119 @@
+<script>
+  // Define applyGiftcard globally
+
+  {% comment %} const validateRedeem = async () => {
+    const cardNumber = document.getElementById('gift_card_number').value.replace(/\D/g, '');
+    const cardPin = document.getElementById('gift_card_pin').value.replace(/\D/g, '');
+    const amount = parseInt(document.getElementById('gc_amount').value.trim()) || 0;
+
+    let data = await balanceEnquiry();
+    if (!data) return false;
+    const CardStatus = data?.Cards[0]?.CardStatus;
+    const availableBalance = data?.Cards[0]?.Balance;
+
+    if(amount === 0){
+      amountError.style.display = 'block';
+      amountError.innerHTML = `Please enter the amount.`;
+      applyGiftcard.style.display = 'block';
+      applyGiftcard.disabled = false;
+      applyRedeemButton.disabled = false;
+      applyRedeemButton.style.display = 'none';
+      return false;
+    }else if(amount < 0){
+      amountError.style.display = 'block';
+      amountError.innerHTML = `Please enter a valid Amount`;
+      applyGiftcard.style.display = 'block';
+      applyGiftcard.disabled = false;
+      applyRedeemButton.disabled = false;
+      applyRedeemButton.style.display = 'none';
+      return false;
+    }else if(amount > availableBalance){
+      amountError.style.display = 'block';
+      amountError.innerHTML = `Your have not enough Balance`;
+      applyGiftcard.style.display = 'block';
+      applyGiftcard.disabled = false;
+      applyRedeemButton.disabled = false;
+      applyRedeemButton.style.display = 'none';
+      return false;
+    }else if(amount < availableBalance  && CardStatus !== 'Activated'){
+      apiResponseMsg.classList = '';
+      apiResponseMsg.classList.add('response-error');
+      apiResponseMsg.innerHTML = `Your Card Number is ${cardNumber} NOT activated`;
+      applyGiftcard.style.display = 'block';
+      applyGiftcard.disabled = false;
+      applyRedeemButton.disabled = false;
+      applyRedeemButton.style.display = 'none';
+      return false;
+    }else if(amount <= availableBalance && CardStatus === 'Activated'){
+      return await callValidateRedeemApi(cardNumber, cardPin, amount);
+    }else{
+      return false;
+    }
+  };
+
+  const callValidateRedeemApi = async (cardNumber, cardPin, amount) => {
+    let apiRawData = JSON.parse(localStorage.getItem('QC-ApiData'));
+    try {
+      const response = await fetch(POST_Validate_Redeem, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          DateAtClient: DateAtServer,
+          TransactionId: apiRawData.transId,
+          Authorization: `Bearer ${apiRawData.AuthToken}`,
+        },
+        body: JSON.stringify({
+          inputType: '1',
+          numberOfCards: 1,
+          Cards: [
+            {
+              CardNumber: cardNumber,
+              CardPIN: cardPin,
+              Amount: amount,
+              InvoiceNumber: `INV-${apiRawData.transId}`,
+              Notes: '{VldType~GCRDM|Amt~2000}',
+            },
+          ],
+          TransactionModeID: 0,
+          TransactionTypeId: 302,
+        }),
+      });
+
+      if (!response.ok) {
+        throwErrorMessage(response.status);
+        return false;
+      }
+
+      const data = await response.json();
+      
+      let ResponseCode = data?.Cards[0]?.ResponseCode;
+      if (ResponseCode === 0) {
+        applyGiftcard.style.display = 'none';
+        applyRedeemButton.style.display = 'block';
+        apiResponseMsg.classList = '';
+        apiResponseMsg.classList.add("response-success");
+        apiResponseMsg.innerHTML = `Validate Successfull. Your Balance is ${data?.Cards[0]?.Balance}`;
+        apiRawData.transId++
+        localStorage.setItem('QC-ApiData', JSON.stringify(apiRawData));
+        return data;
+      }else{
+        applyGiftcard.style.display = 'block';
+        applyGiftcard.disabled = false;
+        applyRedeemButton.disabled = false;
+        applyGiftcard.disabled = false;
+        applyRedeemButton.style.display = 'none';
+        apiResponseMsg.classList = '';
+        apiResponseMsg.classList.add("response-error");
+        apiResponseMsg.innerHTML =`${data?.ResponseMessage}`; 
+        return false;
+      }
+
+      return data;
+    } catch (error) {
+      apiResponseMsg.classList.add('response-error');
+      apiResponseMsg.innerHTML = `Service Unavailable. Please try after sometime`;
+      console.error('Error in Validate API:', error);
+      return false; 
+    }
+  }; {% endcomment %}
+</script>

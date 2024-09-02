@@ -1,0 +1,91 @@
+<script>
+  async function deleteCouponCode(priceRuleId, discountCodeId, discountCode, time) {
+    if (!priceRuleId || !discountCodeId || !discountCode || !time) {
+      console.log('Missing required parameters for deleteCouponCode');
+      return false;
+    }
+
+    const createTime = new Date(time).getTime();
+    const expiryTime = createTime + 30 * 60 * 1000; // 7 minutes
+
+    const timer = setTimeout(async () => {
+      try {
+        console.log('Second Timer end');
+        const usageCount = await checkDiscountCodeUsage(priceRuleId, discountCodeId);
+
+        if (usageCount === 0) {
+          const cancelRedeemData = await cancelRedeem(discountCode);
+
+          if (
+            cancelRedeemData?.Cards[0]?.ResponseCode === 0 ||
+            cancelRedeemData?.Cards[0]?.ResponseMessage === 'Transaction is already cancelled.'
+          ) {
+            await deleteDiscountCode(priceRuleId);
+            await updateLocalStorage(discountCodeId, 'Expired: Code Not Used');
+            console.log(`Coupon with ID ${discountCodeId} NOT USED. deleted from Shopify.`);
+          } else {
+            console.error('Error cancelling redeem:', cancelRedeemData?.Cards[0]?.ResponseMessage);
+          }
+        } else {
+          console.log(`Coupon with ID ${discountCodeId} is USED. Not deleted from Shopify.`);
+          await updateLocalStorage(discountCodeId, 'Expired: Code Already Used');
+        }
+      } catch (error) {
+        console.error('Error in coupon deletion process:', error.message);
+      }
+    }, expiryTime - Date.now());
+
+    return timer;
+  }
+
+  async function updateLocalStorage(discountCodeId, status) {
+    const storedData = localStorage.getItem('QC-DiscountCode');
+    if (storedData) {
+      let discountCodesArray = JSON.parse(storedData);
+      const disCodeId = Number(discountCodeId);
+      const index = discountCodesArray.findIndex((item) => item.discountCode.couponCodeId === disCodeId);
+
+      if (index !== -1) {
+        discountCodesArray[index].discountCode.code_status = status;
+        await showCouponOnCart(discountCodesArray);
+        discountCodesArray.splice(index, 1);
+        localStorage.setItem('QC-DiscountCode', JSON.stringify(discountCodesArray));
+        console.log(`Coupon with ID ${discountCodeId} delete in local storage.`);
+      } else {
+        console.log(`Coupon with ID ${discountCodeId} not found in local storage.`);
+      }
+    } else {
+      console.log('No discount codes found in local storage.');
+    }
+  }
+
+  async function deleteDiscountCode(priceRuleId) {
+    try {
+      const response = await fetch('/apps/coupons', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'DELETECODE',
+          data: {
+            priceRuleId,
+          },
+        }),
+      });
+      console.log('deleteDiscountCode response', response);
+      const result = await response.json();
+      console.log('deleteDiscountCode result', result);
+      if (result.success) {
+        console.log(result.message);
+        return true;
+      } else {
+        console.error('Error deleting discount code:', result.error);
+        return false;
+      }
+    } catch (error) {
+      console.error('Error deleting discount code:', error.message || error);
+      return false;
+    }
+  }
+</script>

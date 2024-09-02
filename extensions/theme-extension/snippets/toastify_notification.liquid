@@ -1,0 +1,47 @@
+<script>
+    let showToast = async (message, duration, color) => {
+        if (typeof message !== 'string' || typeof duration !== 'number' || typeof color !== 'string') {
+          console.error('Invalid argument types. Expected (string, number, string)');
+          return;
+        }
+      
+        let toastContainer = document.getElementById('toast-container');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toast-container';
+            toastContainer.classList.add('toast-container');
+            document.body.appendChild(toastContainer);
+        }
+      
+        let toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.style.color = color;
+      
+        let toastMessage = document.createElement('span');
+        toastMessage.textContent = message;
+      
+        let closeBtn = document.createElement('button');
+        closeBtn.className = 'close-btn';
+        closeBtn.textContent = '✖';
+        closeBtn.onclick = () => {
+          if (toastContainer.contains(toast)) {
+            toastContainer.removeChild(toast);
+          }
+        };
+      
+        let progressBar = document.createElement('div');
+        progressBar.className = 'progress-bar';
+        progressBar.style.backgroundColor = color;
+        progressBar.style.animationDuration = `${duration}ms`;
+      
+        toast.append(toastMessage, closeBtn, progressBar);
+        toastContainer.appendChild(toast);
+      
+        await new Promise(resolve => setTimeout(resolve, duration));
+      
+        if (toastContainer.contains(toast)) {
+          toastContainer.removeChild(toast);
+        }
+      };
+    
+</script>

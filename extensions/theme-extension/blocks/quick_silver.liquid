@@ -1,0 +1,122 @@
+<!-- Existing HTML code -->
+{% comment %} <button id="fetchButton">Do you have any Gift Card?</button> {% endcomment %}
+
+<div id="popUp" class="quickSilver_popup">
+  <!-- Pop-up content -->
+  <div id="giftcard">
+    <div class="modal-content">
+      <button class="modal-close" aria-label="Close">X</button>
+      <div class="popup-details">
+        <div class="checkout_coupon checkout_giftcard">
+          <form
+            action="javascript:void(0)"
+            id="apply_gift_card_form"
+            class="giftcard-form"
+            novalidate
+          >
+            <div class="form-element card-number">
+              <label>Enter 16 Digit Gift Card Number *</label>
+              <!-- Modified input field with added oninput attribute -->
+              <input
+                type="text"
+                id="gift_card_number"
+                name="gift_card_number"
+                class="form-field validfieldnumaric removeemoji"
+                maxlength="16"
+                autocomplete="off"
+                data-login="1"
+                value=""
+                oninput="validateInputField(this)"
+              >
+              <!-- Error message placeholder -->
+              <p id="cardError" style="color: red; display: none;"></p>
+            </div>
+            <div class="form-element card-pin">
+              <label>Card PIN *</label>
+              <!-- Modified input field with added oninput attribute -->
+              <input
+                type="password"
+                name="gift_card_pin"
+                class="form-field validfieldnumaric removeemoji"
+                maxlength="6"
+                id="gift_card_pin"
+                autocomplete="new-password"
+                value=""
+                oninput="validateInputField(this)"
+              >
+              <!-- Error message placeholder -->
+              <p id="pinError" style="color: red; display: none;"></p>
+            </div>
+            <div class="form-element card-amount">
+              <label>Amount</label>
+              <input
+                type="number"
+                id="gc_amount"
+                name="gc_amount"
+                autocomplete="off"
+                class="form-field validfieldnumaric removeemoji"
+                maxlength="5"
+                value=""
+                oninput="validateInputField(this)"
+              >
+              <p id="gc_amountError" style="color: red; display: none;"></p>
+            </div>
+
+            <div class="form-btn">
+              <button id="balance_enquiry_button" class="btn" onclick="balance_check(event)"
+                >Balance Enquiry
+                </button>
+              {% comment %} <button
+                id="apply_giftcard_btn"
+                class="btn bg--gray color-white"
+                onclick="applyGiftCartBtn(event)"
+              >
+                Apply Gift Card
+              </button> {% endcomment %}
+              <button
+                id="apply_redeem_btn"
+                class="btn bg--gray color-white"
+                onclick="redeem_button(event)"
+              >
+                Redeem
+              </button>
+            </div>
+          </form>
+          <p id="api-response-msg" class="api-response-msg">Create your coupon. Valid for just 15 min!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% render 'api_variable' %}
+{% render 'toastify_notification' %}
+{% render 'get_auth_token' %}
+{% render 'gift_card_ui' %}
+{% render 'form_validation' %}
+{% render 'cart_data' %}
+{% render 'create_giftcard_coupon' %}
+{% render 'balance_enquiry' %}
+{% render 'validate_redeem' %}
+{% render 'redeem' %}
+{% render 'check_DiscountCodeUsage' %}
+{% render 'cancel_redeem' %}
+{% render 'get_all_discountCode' %}
+{% render 'delete_couponCode' %}
+
+<!-- Schema code -->
+{% schema %}
+{
+  "name": "Quick Silver",
+  "target": "section",
+  "settings": [
+    { "type": "product", "id": "product", "label": "product", "autofill": true },
+    {
+      "type": "color_background",
+      "id": "bgColor",
+      "label": " Background Color",
+      "default": "linear-gradient(#ffffff, #000000)"
+    }
+  ]
+}
+{% endschema %}

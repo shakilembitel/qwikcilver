@@ -1,0 +1,55 @@
+<script>
+    const getAuthToken = async (date, TransactionId) => {
+      try {
+        const response = await fetch(POST_Authorise, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            DateAtClient: date,
+            TransactionId,
+          },
+          body: JSON.stringify({
+            UserName: 'PC.MANAGER',
+            Password: 'WELCOME',
+            TerminalId: 'PC Chandra-Online-POS2',
+          }),
+        });
+    
+        if (!response.ok) {
+          throwErrorMessage(response.status);
+        }
+    
+        const data = await response.json();
+    
+        if (data?.ResponseMessage === "Transaction successful.") {
+          return data;
+        } else {
+          console.error('Transaction was not successful:', data.ResponseMessage);
+          return null;
+        }
+      } catch (error) {
+        console.error('Error fetching auth token:', error);
+        return null;
+      }
+    };
+    
+
+    function getCurrentDateTime(){
+      const now = new Date();
+    
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+    
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+    
+      return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+    }
+    
+    const isValidDateTimeString = (dateTimeString) => {
+      const dateTimeRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/;
+      return dateTimeRegex.test(dateTimeString);
+    };
+</script>
