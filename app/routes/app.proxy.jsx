@@ -110,6 +110,7 @@ async function handleCreateAction(
   };
 
   const priceRulesUrl = `${SHOPIFY_APP_URL}/admin/api/${SHOPIFY_API_VERSION}/price_rules.json`;
+  console.log("priceRulesUrl", priceRulesUrl);
   const priceRulesResponse = await fetch(
     priceRulesUrl,
     priceRulesRequestOptions,
@@ -122,6 +123,8 @@ async function handleCreateAction(
   }
 
   const priceRulesResult = await priceRulesResponse.json();
+  console.log("🚀  priceRulesResult", priceRulesResult);
+
   let price_rules_id = priceRulesResult.price_rule.id;
 
   const { CurrentBatchNumber, TransactionId, Cards, TotalAmount } = redeemData;
@@ -155,9 +158,11 @@ async function handleCreateAction(
   };
 
   const url = `${SHOPIFY_APP_URL}/admin/api/${SHOPIFY_API_VERSION}/price_rules/${price_rules_id}/discount_codes.json`;
+  console.log("🚀  url", url);
   const discountCodesResponse = await fetch(url, discountCodesRequestOptions);
 
   const discountCodesResult = await discountCodesResponse.json();
+  console.log("🚀  discountCodesResult", discountCodesResult);
 
   if (discountCodesResult) {
     let discountCode = {
