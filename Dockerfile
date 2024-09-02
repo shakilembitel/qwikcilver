@@ -21,8 +21,10 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/prisma ./prisma
 
+# Generate Prisma client in production stage
+RUN npx prisma generate
+
 EXPOSE 3000
 
 # Run migrations and start the app
-
-CMD ["npm", "run", "docker-start", "npx prisma migrate deploy && npm run start"]
+CMD npx prisma migrate deploy && npm run start
