@@ -24,4 +24,5 @@ COPY --from=builder /app/prisma ./prisma
 EXPOSE 3000
 
 # Run migrations and start the app
-CMD npx prisma migrate deploy && npm run start
+
+CMD ["npm", "run", "docker-start"]
