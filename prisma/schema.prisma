@@ -30,3 +30,25 @@ model Session {
   collaborator  Boolean?  @default(false)
   emailVerified Boolean?  @default(false)
 }
+
+model Settings {
+  id          Int    @id @default(autoincrement())
+  shop        String?  @unique
+  name        String
+  description String?
+}
+
+// Create Wishlist model with relations to Session. Store session id in wishlist table with one to many relation
+model testing {
+  id              Int      @id @default(autoincrement())
+  customerId      String?
+  productId       String?
+  shop            String?
+  createdAt       DateTime @default(now())
+}
+
+model PublicData {
+  id    Int    @id @default(autoincrement())
+  name  String
+  value String
+}

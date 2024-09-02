@@ -1,7 +1,5 @@
 import { json } from "@shopify/remix-oxygen";
-import { useLoaderData } from "@remix-run/react";
 import dotenv from "dotenv";
-import shopify from "../shopify.server";
 dotenv.config();
 
 export async function action({ request, context }) {
