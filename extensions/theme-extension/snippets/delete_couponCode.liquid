@@ -60,6 +60,7 @@
 
       if (index !== -1) {
         discountCodesArray[index].discountCode.code_status = status;
+        discountCodesArray[index].discountCode.checkDeletion = true;
         await showCouponOnCart(discountCodesArray);
         discountCodesArray.splice(index, 1);
         localStorage.setItem('QC-DiscountCode', JSON.stringify(discountCodesArray));
