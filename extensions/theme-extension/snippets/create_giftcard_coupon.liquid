@@ -54,7 +54,7 @@
 
     offerCodes.innerHTML = '';
 
-    const createCouponElement = (code, amount, discountCodeId, priceRuleId, createdDate, usage_count, code_status, expiresAt) => {
+    const createCouponElement = (code, amount, discountCodeId, priceRuleId, createdDate, usage_count, code_status, expiresAt, checkDeletion) => {
       code_status = code_status ?? false;
       const couponElement = document.createElement('div');
       couponElement.className = 'offer_code';
@@ -69,13 +69,13 @@
         </div>
         <p class="offer_code__text"><span>RS. ${amount}</span> rupees off on this QuickCilver Coupon code</p>
         <p>This coupon is valid for only <b>15 min</b></p>
-        <p class="timer" data-code_status="${code_status}" data-usage_count="${usage_count}" data-create-date="${createdDate}" data-expires-at="${expiresAt}" data-discount-code-id="${discountCodeId}" data-price-rule-id="${priceRuleId}" data-discount-code="${code}">Expires in: <span>${createdDate}</span></p>
+        <p class="timer" data-code_status="${code_status}" data-deletion-attempted="${checkDeletion}"  data-usage_count="${usage_count}" data-create-date="${createdDate}" data-expires-at="${expiresAt}" data-discount-code-id="${discountCodeId}" data-price-rule-id="${priceRuleId}" data-discount-code="${code}">CodeStatus: <span>Loading...</span></p>
       `;
       return couponElement;
     };
 
     coupons.forEach((coupon) => {
-      const { code, couponCodeId, price_rules_id , created_at, usage_count, code_status = false, expiresAt } = coupon.discountCode;
+      const { code, couponCodeId, price_rules_id , created_at, usage_count, code_status, expiresAt, checkDeletion } = coupon.discountCode;
 
       if (!code?.trim() || !couponCodeId || !price_rules_id) return false;
       
@@ -95,7 +95,7 @@
       }
 
       const finalExpiresAt = expiresAt || new Date(new Date(created_at).getTime() + 15 * 60000).toISOString();
-      const couponElement = createCouponElement(code, amount, couponCodeId, price_rules_id, created_at, usage_count, code_status, finalExpiresAt);
+      const couponElement = createCouponElement(code, amount, couponCodeId, price_rules_id, created_at, usage_count, code_status, finalExpiresAt,checkDeletion);
       offerCodes.appendChild(couponElement);
     });
 
@@ -108,8 +108,8 @@
     document.querySelectorAll('.timer[data-code_status="Expired: Code Not Used"]')?.forEach(timerElement => {
       timerElement.querySelector('span').textContent = 'Expired: Code Not Used';
     });
-    document.querySelectorAll('.timer[data-code_status="Expired: Code Already Used"]')?.forEach(timerElement => {
-      timerElement.querySelector('span').textContent = 'Expired: Code Already Used';
+    document.querySelectorAll('.timer[data-code_status="Expired: Code Used"]')?.forEach(timerElement => {
+      timerElement.querySelector('span').textContent = 'Expired: Code Used';
     }); 
 
     // Handle the unused coupons
@@ -124,7 +124,7 @@
       let allTimersExpired = true;
     
       unusedTimers.forEach(async (timerElement) => {
-        if (timerElement.hasAttribute('data-timer-stopped')) {
+        if (timerElement.getAttribute('data-deletion-attempted') === "ture") {
           return; // Skip this timer if it's already stopped
         }
         
@@ -136,11 +136,11 @@
     
         if (timeLeft > 0) {
           allTimersExpired = false;
-          const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-          const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-          spanElement.textContent = `${minutes}m ${seconds}s`;
-        } else if (!timerElement.hasAttribute('data-deletion-attempted')) {
+          spanElement.style.color = '#16a31b'
+          spanElement.textContent = 'Active'
+        } else if (timerElement.getAttribute('data-deletion-attempted') === "false") {
           console.log("First Timer end")
+          spanElement.style.color = '#ff0000';
           spanElement.textContent = 'Expired';
           const discountCodeId = timerElement.getAttribute('data-discount-code-id');
           const priceRuleId = timerElement.getAttribute('data-price-rule-id');
@@ -155,8 +155,6 @@
         clearInterval(intervalId);
       }
     };
-    
-
     const intervalId = setInterval(updateTimers, 1000);
   }
 

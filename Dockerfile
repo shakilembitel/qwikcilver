@@ -9,7 +9,7 @@ COPY . .
 RUN npm run build
 
 # Generate Prisma client
-RUN npx prisma generate
+RUN npm run prisma generate
 
 FROM node:18-alpine
 

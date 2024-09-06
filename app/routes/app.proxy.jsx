@@ -183,6 +183,7 @@ async function handleCreateAction(
         discountCodesResult.discount_code.usage_count === 0 ? false : true,
       code_status: false,
       expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+      checkDeletion: false,
     };
     return json({ success: true, discountCode });
   } else {
@@ -390,6 +391,8 @@ async function handleGetAllCodeAction(
           price_rules_id: item.priceRuleId,
           created_at: item.created_at,
           usage_count: item.usage_count,
+          code_status: false,
+          checkDeletion: false,
         },
       }));
   }

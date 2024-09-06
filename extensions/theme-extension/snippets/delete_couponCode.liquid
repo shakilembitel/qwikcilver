@@ -1,9 +1,20 @@
 <script>
+  const processedCoupons = new Set();
+
   async function deleteCouponCode(priceRuleId, discountCodeId, discountCode, time) {
     if (!priceRuleId || !discountCodeId || !discountCode || !time) {
       console.log('Missing required parameters for deleteCouponCode');
       return false;
     }
+
+  // If this coupon has already been processed, don't process it again
+  if (processedCoupons.has(discountCodeId)) {
+    console.log(`Coupon ${discountCodeId} has already been processed`);
+    return false;
+  }
+
+  // Mark this coupon as processed
+  processedCoupons.add(discountCodeId);
 
     const createTime = new Date(time).getTime();
     const expiryTime = createTime + 30 * 60 * 1000; // 7 minutes
@@ -26,14 +37,16 @@
           } else {
             console.error('Error cancelling redeem:', cancelRedeemData?.Cards[0]?.ResponseMessage);
           }
-        } else {
+      } else if (usageCount === 1) {
+        await updateLocalStorage(discountCodeId, 'Expired: Code Used');
           console.log(`Coupon with ID ${discountCodeId} is USED. Not deleted from Shopify.`);
-          await updateLocalStorage(discountCodeId, 'Expired: Code Already Used');
+      } else {
+        console.log(`Coupon with ID ${discountCodeId} something went wrong`);
         }
       } catch (error) {
         console.error('Error in coupon deletion process:', error.message);
       }
-    }, expiryTime - Date.now());
+  }, Math.max(0, expiryTime - Date.now()));
 
     return timer;
   }
@@ -73,9 +86,7 @@
           },
         }),
       });
-      console.log('deleteDiscountCode response', response);
       const result = await response.json();
-      console.log('deleteDiscountCode result', result);
       if (result.success) {
         console.log(result.message);
         return true;

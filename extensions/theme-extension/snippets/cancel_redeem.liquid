@@ -1,114 +1,4 @@
 <script>
-  {% comment %} function splitAndAssign(input) {
-    let OriginalBatchNumber = ''
-    let OriginalAmount = ''
-    let OriginalTransactionId = ''
-    let OriginalApprovalCode = ''
-    let cardNumber = ''
-  
-    // Split the input string by letters
-    const parts = input.split(/([A-Za-z])/).filter(Boolean)
-  
-    // Assigning values to variables
-    OriginalBatchNumber = parts[3] // The first value after the first letter (Q)
-    OriginalAmount = parts[5] // The second value after the second letter (A)
-    OriginalTransactionId = parts[7] // The third value after the third letter (A)
-  
-    // Processing the last value to separate cardNumber and OriginalApprovalCode
-    const lastValue = parts[9] // The fourth value after the fourth letter (A)
-    cardNumber = lastValue.substring(0, 16) // First 16 digits
-    OriginalApprovalCode = lastValue.substring(16) // Remaining digits
-  
-    // Return the values as an object
-    return {
-      OriginalBatchNumber,
-      OriginalAmount,
-      OriginalTransactionId,
-      cardNumber,
-      OriginalApprovalCode,
-    }
-  }
-
-  async function cancelRedeem(input) {
-    let apiRawData = JSON.parse(localStorage.getItem('QC-ApiData'));
-  
-    if (!apiRawData) {
-      throw new Error('Invalid details');
-    }
-  
-    let OriginalBatchNumber, OriginalAmount, OriginalTransactionId, OriginalApprovalCode, cardNumber;
-  
-    if (typeof input === 'string') {
-      // Input is a discount code
-      const result = splitAndAssign(input);
-
-      OriginalAmount = result.OriginalAmount
-      OriginalApprovalCode = result.OriginalApprovalCode
-      OriginalBatchNumber = result.OriginalBatchNumber
-      OriginalTransactionId = result.OriginalTransactionId
-      cardNumber = result.cardNumber
-    } else if (typeof input === 'object') {
-      // Input is redeemData
-      OriginalBatchNumber = input.CurrentBatchNumber;
-      OriginalAmount = input.TotalAmount;
-      OriginalTransactionId = input.TransactionId;
-      OriginalApprovalCode = input.Cards[0]?.ApprovalCode;
-      cardNumber = input.Cards[0]?.CardNumber;
-    } else {
-      throw new Error('Invalid input type');
-    }
-  
-    if (!OriginalBatchNumber || !OriginalAmount || !OriginalTransactionId || !OriginalApprovalCode || !cardNumber) {
-      throw new Error('Missing required parameters');
-    }
-  
-    try {
-      const response = await fetch(POST_Cancel_Redeem, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          DateAtClient: DateAtServer,
-          TransactionId: apiRawData.transId,
-          Authorization: `Bearer ${apiRawData.AuthToken}`,
-        },
-        body: JSON.stringify({
-          inputType: '1',
-          numberOfCards: 1,
-          Cards: [
-            {
-              CardNumber: cardNumber,
-              Amount: OriginalAmount,
-              OriginalRequest: {
-                OriginalBatchNumber,
-                OriginalTransactionId,
-                OriginalApprovalCode,
-                OriginalAmount,
-                OriginalInvoiceNumber: `PC-${OriginalTransactionId}`,
-              },
-              Reason: 'Return',
-            },
-          ],
-          TransactionModeID: 0,
-          TransactionTypeId: 312,
-        }),
-      });
-      
-      if (!response.ok) {
-        throwErrorMessage(response.status);
-        return;
-      }
-  
-      const data = await response.json();
-      console.log("Cancel redeem", data.ResponseMessage);
-      apiRawData.transId++;
-      localStorage.setItem('QC-ApiData', JSON.stringify(apiRawData));
-      return data;
-    } catch (error) {
-      console.error('Error cancel_redeem:', error);
-      alert(`Error: ${error.message}`);
-    }
-  } {% endcomment %}
-
   async function cancelRedeem(input) {
     let apiRawData = JSON.parse(localStorage.getItem('QC-ApiData'));
     if (!apiRawData) {
@@ -137,9 +27,10 @@
         localStorage.setItem('QC-ApiData', JSON.stringify(apiRawData));
         console.log("Cancel redeem successful:", result.data.ResponseMessage);
         return result.data;
-      } else if (result.success === false) {
+      } else if (result.success === false && result.data.Cards[0].ResponseMessage ===  "Transaction is already cancelled.") {
         apiRawData.transId++;
         localStorage.setItem('QC-ApiData', JSON.stringify(apiRawData));
+      } else {
         console.error('Error cancelling redeem:', result.data.ResponseMessage);
       }
     } catch (error) {
