@@ -28,14 +28,7 @@
       return false;
     }
     const { totalPrice } = await cartData();
-    let cartValue = parseInt(totalPrice / 100);
-    {% comment %} if (amount > cartValue) {
-      apiResponseMsg.classList.add('response-error');
-      apiResponseMsg.innerHTML = `Your Cart Value Rs. ${cartValue} is below the Redeem Amount.`;
-      applyRedeemButton.disabled = false;
-      return false;
-    } {% endcomment %}
-  
+    let cartValue = parseInt(totalPrice / 100);  
     try {
       let apiRawData = JSON.parse(localStorage.getItem('QC-ApiData'));
       let IdempotencyKey = await generateRandomKey();
@@ -87,94 +80,4 @@
       return false;
     }
   }
-  
-
-
-
-  // redeem function of api
-  {% comment %} async function generateRandomKey(length = 8) {
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let randomKey = '';
-    
-    for (let i = 0; i < length; i++) {
-      const randomIndex = Math.floor(Math.random() * characters.length);
-      randomKey += characters[randomIndex];
-    }
-    
-    return randomKey;
-  }  
-
-  async function redeem() {
-
-    const cardNumber = document.getElementById('gift_card_number').value.replace(/\D/g, '');
-    const cardPin = document.getElementById('gift_card_pin').value.replace(/\D/g, '');
-    const amount = parseInt(document.getElementById('gc_amount').value.trim()) || 0;
-
-    const { totalPrice } = await cartData();
-    let cartValue = parseInt(totalPrice/100);
-
-    if (amount > cartValue){
-      apiResponseMsg.classList.add('response-error');
-      apiResponseMsg.innerHTML = `You Cart Value Rs. ${cartValue} is below the Redeem Amount.`;
-      applyRedeemButton.disabled = false;
-      return false;
-    }
-    try {     
-
-      let apiRawData = JSON.parse(localStorage.getItem('QC-ApiData'));
-      let IdempotencyKey = await generateRandomKey();
-
-      // Prepare the request payload
-      const payload = {
-        TransactionModeId: '0',
-        TransactionTypeId: "302",
-        IdempotencyKey: IdempotencyKey,
-        InvoiceNumber: `PC-${apiRawData.transId}`,
-        BillAmount: cartValue,
-        Notes: `{VldType~GCRDM|Amt~${amount}|BillAmount~${cartValue}}`,
-        InputType: '1',
-        NumberOfCards: '1',
-        Cards: [
-          {
-            CardNumber: cardNumber,
-            CardPin: cardPin,
-            Amount: amount,
-          },
-        ],
-      };
-
-      // Make the fetch request
-      const response = await fetch(POST_Redeem, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          DateAtClient: DateAtServer,
-          TransactionId: apiRawData.transId,
-          Authorization: `Bearer ${apiRawData.AuthToken}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        throwErrorMessage(response.status);
-        return false;
-      }
-
-      const data = await response.json();
-      if (data.ResponseCode === 0) {
-        apiRawData.transId++
-        localStorage.setItem('QC-ApiData', JSON.stringify(apiRawData))
-        console.log("redeem", data)
-        await createDiscountCode(data);
-      } else {
-        throwErrorMessage(response.status);
-        return false;
-      }
-    } catch (error) {
-      apiResponseMsg.classList.add('response-error');
-      apiResponseMsg.innerHTML = `Service Unavailable. Please try after sometime`;
-      console.error('Error in redeem API:', error);
-      return false;
-    }
-  } {% endcomment %}
 </script>

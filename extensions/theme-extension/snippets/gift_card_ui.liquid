@@ -9,7 +9,6 @@
   const pinError = document.getElementById('pinError');
   const amountError = document.getElementById('gc_amountError');
   const apiResponseMsg = document.getElementById('api-response-msg');
-  {% comment %} const applyGiftcard = document.getElementById('apply_giftcard_btn'); {% endcomment %}
   const applyRedeemButton = document.getElementById('apply_redeem_btn');
   const balanceCheckBtn = document.getElementById('balance_enquiry_button');
   const giftCardNumber = document.getElementById('gift_card_number');
@@ -59,10 +58,7 @@
     apiResponseMsg.classList = '';
     amountError.style.display = 'none';
     applyRedeemButton.disabled = false;
-    {% comment %} applyGiftcard.disabled = false; {% endcomment %}
     balanceCheckBtn.disabled = false;
-    {% comment %} applyRedeemButton.style.display = 'none'; {% endcomment %}
-    {% comment %} applyGiftcard.style.display = 'block'; {% endcomment %}
   }
 
   document.addEventListener("DOMContentLoaded", async () => {
@@ -134,13 +130,6 @@
     applyRedeemButton.disabled = false;
     return await balanceEnquiry();
   }
-
-  {% comment %} async function applyGiftCartBtn(e) {
-    e.stopPropagation();
-    applyGiftcard.disabled = true;
-    {% comment %} balanceCheckBtn.disabled = true; {% endcomment %}
-    await validateRedeem();
-  } {% endcomment %}
 
   async function redeem_button(e) {
     e.stopPropagation();
