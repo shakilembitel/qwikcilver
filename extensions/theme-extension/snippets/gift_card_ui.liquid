@@ -16,7 +16,7 @@
   const gcAmount = document.getElementById('gc_amount');
   const fetchButton = document.querySelector('#fetchButton');
   let customerId = ShopifyAnalytics?.meta?.page?.customerId || '';
-  let DateAtServer = getCurrentDateTime();
+  {% comment %} let DateAtServer = getCurrentDateTime(); {% endcomment %}
   let apiRawData =  localStorage.getItem('QC-ApiData');
 
   if (apiRawData) {
@@ -89,12 +89,12 @@
       window.location.href = "/account/login?show_popup=true";
       return;
     }
-    const currentDateTime = getCurrentDateTime();
+    {% comment %} const currentDateTime = getCurrentDateTime();
     if (!isValidDateTimeString(currentDateTime)) {
       console.error('Invalid dateTimeString format:', currentDateTime);
       return;
     }
-    DateAtServer = currentDateTime;
+    DateAtServer = currentDateTime; {% endcomment %}
     const storedData = localStorage.getItem('QC-ApiData');
     if (storedData) {
       const parsedData = JSON.parse(storedData)
@@ -104,7 +104,7 @@
       if (parsedData.AuthToken && daysSinceTokenStored < 27) {
         return // Exit if valid token found
       } else {
-        const data = await getAuthToken(DateAtServer, apiRawData.transId)
+        const data = await getAuthToken(apiRawData.transId)
 
         if (data) {
           apiRawData.transId++ // Increment TransactionId
@@ -114,7 +114,7 @@
         }
       }
     } else {
-      const data = await getAuthToken(DateAtServer, apiRawData.transId);      
+      const data = await getAuthToken(apiRawData.transId);      
       if (data) {
         apiRawData.transId++ // Increment TransactionId
         apiRawData.AuthToken = data.AuthToken

@@ -1,6 +1,7 @@
 <script>
   async function cancelRedeem(input) {
     let apiRawData = JSON.parse(localStorage.getItem('QC-ApiData'));
+    let DateAtServer = await getCurrentDateTime();
     if (!apiRawData) {
       throw new Error("Invalid details");
     }

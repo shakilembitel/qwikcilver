@@ -1,5 +1,6 @@
 <script>
   async function balanceEnquiry() {
+    let DateAtServer = await getCurrentDateTime();
     try {
       let cardNumber = document.getElementById('gift_card_number').value.replace(/\D/g, '');
       let cardPIN = document.getElementById('gift_card_pin').value.replace(/\D/g, '');

@@ -1,11 +1,32 @@
 <script>
-    const getAuthToken = async (date, TransactionId) => {
+  async function getCurrentDateTime() {
+    const now = new Date();
+
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+
+    // Use toISOString() for the time part to ensure ISO format
+    const timeISO = now.toISOString().split('T')[1].substring(0, 8);
+
+    const dateTimeString = `${year}-${month}-${day}T${timeISO}`;
+
+    const dateTimeRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/;
+    if (!dateTimeRegex.test(dateTimeString)) {
+      console.error('Invalid dateTimeString format:', dateTimeString);
+      return null;
+    }
+
+    return dateTimeString;
+  }
+    const getAuthToken = async (TransactionId) => {
+      let DateAtServer = await getCurrentDateTime();
       try {
         const response = await fetch(POST_Authorise, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            DateAtClient: date,
+            DateAtClient: DateAtServer,
             TransactionId,
           },
           body: JSON.stringify({
@@ -34,7 +55,7 @@
     };
     
 
-    function getCurrentDateTime(){
+    {% comment %} function getCurrentDateTime(){
       const now = new Date();
     
       const year = now.getFullYear();
@@ -51,5 +72,5 @@
     const isValidDateTimeString = (dateTimeString) => {
       const dateTimeRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/;
       return dateTimeRegex.test(dateTimeString);
-    };
+    }; {% endcomment %}
 </script>

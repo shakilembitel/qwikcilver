@@ -16,6 +16,8 @@
     const cardNumber = document.getElementById('gift_card_number').value.replace(/\D/g, '');
     const cardPin = document.getElementById('gift_card_pin').value.replace(/\D/g, '');
     const amount = parseInt(document.getElementById('gc_amount').value.trim()) || 0;
+
+    let DateAtServer = await getCurrentDateTime();
   
     if (!validateCardDetails(cardNumber, cardPin)) {
       applyRedeemButton.disabled = false;
